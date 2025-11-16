@@ -35,12 +35,14 @@ The module has an undocumented serial port used as Linux console ttyS1
 [full PCB](c-ap8064-05-amp-pcb-front.jpg)).
 The serial port works with 5V (not 3V3) and 57600 8N1.
 
-:raised_hand: Some (newer) modules do not output anything to the serial port.
-This likely can be fixed by [patching the bootloader](#vendor-bootloader).
+> [!TIP]
+> Some (newer) modules do not output anything to the serial port.
+> This likely can be fixed by [patching the bootloader](#vendor-bootloader).
 
-:warning: Warning: There are probably [multiple hardware versions](https://github.com/hn/linkplay-a31/issues/4) of the Linkplay A31 module
-(which is weird because they are all labeled "V04"). The versions seem to differ in the voltage used at the serial port (3v3 vs. 5v) and
-even the MCU seems to be slightly different (MT7628  vs. MT7688). This needs to be investigated further.
+> [!WARNING]
+> There are probably [multiple hardware versions](https://github.com/hn/linkplay-a31/issues/4) of the Linkplay A31 module
+> (which is weird because they are all labeled "V04"). The versions seem to differ in the voltage used at the serial port (3v3 vs. 5v) and
+> even the MCU seems to be slightly different (MT7628  vs. MT7688). This needs to be investigated further.
 
 
 ## Software
@@ -146,16 +148,19 @@ mtd -r write /tmp/openwrt-ramips-mt76x8-linkplay_a31-squashfs-sysupgrade.bin fir
 
 Make sure that the time of the newly installed system is correct, otherwise you won't be able to download HTTPS content due to certificate validity problems.
 
-:warning: Warning: Make a backup of the flash content before
-overwriting it. No need to say that flashing will void the warranty.
+> [!TIP]
+> Make a backup of the flash content before
+> overwriting it. No need to say that flashing will void the warranty.
 
-:warning: Warning: Take extra care when flashing, especially
-make sure not to overwrite the U-Boot bootloader, this will
-brick your device.
+> [!WARNING]
+> Take extra care when flashing, especially
+> make sure not to overwrite the U-Boot bootloader, this will
+> brick your device.
 
-:raised_hand: [Flash memory has a limited number of write cycles](https://en.wikipedia.org/wiki/Flash_memory#Memory_wear).
-Avoid unnecessary system upgrades or writing large files
-(always use [tmpfs](https://en.wikipedia.org/wiki/Tmpfs) in /tmp if possible).
+> [!IMPORTANT]
+> [Flash memory has a limited number of write cycles](https://en.wikipedia.org/wiki/Flash_memory#Memory_wear).
+> Avoid unnecessary system upgrades or writing large files
+> (always use [tmpfs](https://en.wikipedia.org/wiki/Tmpfs) in /tmp if possible).
 
 #### Rescue access point
 
@@ -189,10 +194,11 @@ is a firmware file that fulfills these requirements by [patching the kernel and 
 This allows it to be flashed via the devices's web interface.
 Use the [rescue access point](#rescue-access-point) to access the system after web flashing.
 
-:warning: Warning: Overwriting the firmware may brick you device.
-It is strongly recommended to [flash via the serial port](#installing) because the
-web firmware file has only been tested once on a single board.
-And if you use the Web Updater, you do not have the option of creating a backup copy of the vendor software.
+> [!WARNING]
+> Overwriting the firmware may brick you device.
+> It is strongly recommended to [flash via the serial port](#installing) because the
+> web firmware file has only been tested once on a single board.
+> And if you use the Web Updater, you do not have the option of creating a backup copy of the vendor software.
 
 If you want to rebuild the web firmware image, you have to pass
 the `-fw` option to the [prepare-openwrt-a31.sh](openwrt-linkplay-a31/prepare-openwrt-a31.sh) script.
@@ -306,7 +312,8 @@ The modified firmware can be written to flash memory e.g. by executing
 `mtd_write -w write /tmp/uboot_v632-patched.img Bootloader`
 on the A31 module.
 
-:warning: Warning: Overwriting the bootloader may brick you device. Be careful.
+> [!WARNING]
+> Overwriting the bootloader may brick you device. Be careful.
 
 
 # Dyon Area L WiFi speaker
