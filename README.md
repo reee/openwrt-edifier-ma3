@@ -372,7 +372,7 @@ ToC 37, Signature: WTcn, Offset: 1d4498, Length: 17399
 ToC 38, Signature: FMup, Offset: 1eb831, Length:  af83
 ```
 
-If you extract the data, you exactly get 38 valid MP3 files with
+If you [extract the data](unpack-ap8064-toc.pl), you exactly get 38 valid MP3 files with
 audio data for all types of events ('Charging', 'Connection lost' etc.).
 
 The annoying WiFi connection message is stored in ToC 30 (Signature `WIfi`) for
