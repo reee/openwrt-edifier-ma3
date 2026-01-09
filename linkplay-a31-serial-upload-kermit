@@ -22,7 +22,7 @@ OUTPUT "\{27}\{27}\{27}1"
 INPUT 5 "MT7628 \35"
 ECHO "Loading initramfs-kernel image"
 LINEOUT "loadb 0x81000000"
-SEND bin/targets/ramips/mt76x8/openwrt-ramips-mt76x8-linkplay_a31-initramfs-kernel.bin
+SEND bin/targets/ramips/mt76x8/openwrt-ramips-mt76x8-edifier_ma3-initramfs-kernel.bin
 
 INPUT 5 "MT7628 \35"
 ECHO "Starting kernel"
