@@ -1,3 +1,5 @@
+/dts-v1/;
+
 #include "mt7628an.dtsi"
 
 #include <dt-bindings/gpio/gpio.h>
@@ -5,15 +7,13 @@
 
 / {
 	/*
-	 * (C) 2024 Hajo Noerenberg
-	 * 
-	 * https://github.com/hn/linkplay-a31
-	 * http://www.noerenberg.de/
-	 *
+	 * Linkplay A31 + TAS5717 Audio Board DTS
+	 * Modified for I2S Master Mode & TAS5717 Support
+	 * Hardware: A-TAS5717-07 V1.0 Carrier
 	 */
 
 	compatible = "linkplay,a31", "mediatek,mt7628an-soc";
-	model = "Linkplay A31";
+	model = "Linkplay A31 with TAS5717";
 
 	chosen {
 		bootargs = "console=ttyS1,57600";
@@ -24,44 +24,55 @@
 		serial1 = &uartlite;
 	};
 
-	/*
-	 * This configures the A31 as an I2S slave using a generic S/PDIF transmitter.
-	 * For I2S master configuration, you'll need to add a real codec and
-	 * extend the settings below (see A31 manual section 2.3).
+	/* 
+	 * 音频子系统配置 - 重构部分
+	 * 使用 simple-audio-card 驱动来桥接 MT7628 I2S 与 TAS5717
 	 */
-
 	sound {
 		compatible = "simple-audio-card";
-		simple-audio-card,name = "Audio-I2S";
+		simple-audio-card,name = "Linkplay-TAS5717";
 		simple-audio-card,format = "i2s";
+		
+		/* 
+		 * 主从模式设定：
+		 * 指向CPU节点(&dailink0_master)，表示CPU产生BCLK和LRCK。
+		 * TAS5717作为Slave接收时钟。
+		 */
 		simple-audio-card,bitclock-master = <&dailink0_master>;
 		simple-audio-card,frame-master = <&dailink0_master>;
+		
+		/* 
+		 * MCLK设定：
+		 * TAS5717需要系统时钟。配置为采样率的256倍。
+		 * MT7628将通过REFCLK引脚输出此频率(如12.288MHz)。
+		 */
+		simple-audio-card,mclk-fs = <256>;
 
-		simple-audio-card,cpu {
+		/* 定义音频控件组件 */
+		simple-audio-card,widgets =
+			"Speaker", "External Speaker";
+			
+		/* 音频路由：将放大器输出连接到虚拟扬声器组件 */
+		simple-audio-card,routing =
+			"External Speaker", "OUT_A",
+			"External Speaker", "OUT_B",
+			"External Speaker", "OUT_C",
+			"External Speaker", "OUT_D";
+
+		/* CPU侧配置 */
+		dailink0_master: simple-audio-card,cpu {
 			sound-dai = <&i2s>;
-			// dai-tdm-slot-num = <2>;
-			// dai-tdm-slot-width = <32>;
 		};
 
-		dailink0_master: simple-audio-card,codec {
-			sound-dai = <&codec_spdif_out>;
+		/* Codec侧配置：引用下方定义的tas5717节点 */
+		simple-audio-card,codec {
+			sound-dai = <&tas5717>;
 		};
 	};
-
-	codec_spdif_out: spdif-transmitter {
-		#address-cells = <0>;
-		#size-cells = <0>;
-		#sound-dai-cells = <0>;
-		compatible = "linux,spdif-dit";
-		status = "okay";
-	};
-
 };
 
 &state_default {
-
-	/* PCB GPIOs 1-5 are wired to MCU pins 14-18 => Linux 494-498 */
-
+	/* PCB GPIOs 1-5 映射到 MCU 引脚 14-18 => Linux 494-498 */
 	pwm0 {
 		groups = "pwm0";
 		function = "gpio";
@@ -71,7 +82,6 @@
 		groups = "spis";
 		function = "gpio";
 	};
-
 };
 
 &spi0 {
@@ -114,14 +124,8 @@
 			};
 
 			/*
-			 * Original firmware has a 'firmware' partition with
-			 * size 0x730000 at 0x250000, a jffs2 'user' partitition
-			 * with size 0x80000 at 0x980000 and a jffs2 'user2'
-			 * partition with size 0x600000 at 0xa00000.
-			 * Dropping both user partitions in favour of a
-			 * bigger 'firmware' partition.
+			 * 固件分区布局调整：合并原有的小分区以适应OpenWrt
 			 */
-
 			partition@250000 {
 				compatible = "denx,uimage";
 				label = "firmware";
@@ -139,6 +143,10 @@
 	};
 };
 
+/* 
+ * I2S控制器配置 
+ * 必须确保 pinctrl 包含 refclk_pins 以输出MCLK
+ */
 &i2s {
 	#sound-dai-cells = <0>;
 	status = "okay";
@@ -146,12 +154,30 @@
 	pinctrl-0 = <&i2s_pins>, <&refclk_pins>;
 };
 
+/* 
+ * I2C控制器配置 - 挂载TAS5717
+ */
 &i2c {
 	status = "okay";
+	
+	tas5717: audio-codec@2a {
+		compatible = "ti,tas5717";
+		reg = <0x2a>; /* 默认地址0x2a (A_SEL接GND) */
+		#sound-dai-cells = <0>;
+
+		/* 
+		 * 硬件复位引脚配置 (根据A-TAS5717-07实际连线启用)
+		 * 如果硬件已做上拉处理，可保持注释状态。
+		 * 常见Linkplay设计可能使用GPIO 14/15/16等。
+		 */
+		/* reset-gpios = <&gpio 15 GPIO_ACTIVE_LOW>; */
+		/* pdn-gpios = <&gpio 14 GPIO_ACTIVE_LOW>; */
+	};
 };
 
 &gdma {
 	status = "okay";
+	/* 注意：确保DMA控制器已启用，否则音频播放将卡死或无声 */
 };
 
 &uart1 {
@@ -169,7 +195,6 @@
 
 &wmac {
 	status = "okay";
-
 	mediatek,mtd-eeprom = <&factory 0x0>;
 };
 
