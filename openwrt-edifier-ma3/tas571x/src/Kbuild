@@ -1,0 +1,2 @@
+obj-m := snd-soc-tas571x.o
+snd-soc-tas571x-objs := tas571x.o

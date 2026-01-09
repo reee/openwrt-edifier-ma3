@@ -26,8 +26,11 @@ cp -v -n $SCRIPT_DIR/836-mt7688-i2s-audio-crash-workaround.patch ./target/linux/
 # Linkplay sound control daemon
 cp -v -r -n $SCRIPT_DIR/linkplay-emu ./package/
 
+# Kernel module for Tas571x
+cp -v -r -n $SCRIPT_DIR/tas571x ./package/kernel/
+
 # Shairport-sync mixer name
-patch -p1 < $SCRIPT_DIR/shairport-sync-config.diff
+#patch -p1 < $SCRIPT_DIR/shairport-sync-config.diff
 
 # System config
 cp -v -r -n $SCRIPT_DIR/files/ ./
